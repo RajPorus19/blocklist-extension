@@ -88,6 +88,20 @@ async function onToggleBlockLists(blockListsIDs: string[], enable: boolean) {
   });
 }
 
+async function onSetBlockListEnabled(blockListId: string, enabled: boolean) {
+  infoLog("background", "setting blocklist enabled", blockListId, enabled);
+  const blockLists = await getBlockLists();
+  const index = blockLists.findIndex((blockList) => blockList.id === blockListId);
+  if (index === -1) {
+    return blockLists;
+  }
+  const updatedBlockLists = [...blockLists];
+  updatedBlockLists[index].enabled = enabled;
+  await setBlockLists(updatedBlockLists);
+  onToggleBlockLists([blockListId], enabled);
+  return updatedBlockLists;
+}
+
 async function updateEntryState(
   blockListId: string,
   entryIndex: number,
@@ -177,6 +191,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case MessageType.TOGGLE_BLOCKLISTS:
         onToggleBlockLists(...(payload as [string[], boolean]));
         sendResponse(true);
+        break;
+      case MessageType.SET_BLOCKLIST_ENABLED:
+        sendResponse(
+          await onSetBlockListEnabled(...(payload as [string, boolean]))
+        );
         break;
       case MessageType.CHECK_BLOCKLISTS_UPDATE:
         sendResponse(await onCheckBlockListsUpdate(payload as string[]));

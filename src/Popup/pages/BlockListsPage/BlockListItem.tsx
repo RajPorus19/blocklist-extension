@@ -5,6 +5,7 @@ import { exportBlockLists } from "@/lib/blockListBuilder";
 import { useBlockListActions } from "@/services/blockListStore";
 import * as Typography from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Accordion,
   AccordionItem,
@@ -39,6 +40,20 @@ export default function BlockListItem({ blockList }: BlockListItemProps) {
     <Card>
       <CardHeader className="sticky top-[45px] z-10 bg-background">
         <Typography.H4>{blockList.infos.title}</Typography.H4>
+        <div className="flex items-center justify-between w-full">
+          <label className="flex items-center gap-2 text-sm">
+            <Switch
+              checked={blockList.enabled}
+              onCheckedChange={(value) =>
+                actions.setBlockListEnabled(blockList.id, value)
+              }
+            />
+            {blockList.enabled ? "Enabled" : "Disabled"}
+          </label>
+          <span className="text-sm text-muted-foreground uppercase">
+            {blockList.platform}
+          </span>
+        </div>
         <div className="flex justify-between items-center w-full">
           <div>
             <Button

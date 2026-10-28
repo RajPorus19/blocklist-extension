@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader } from "@/components/ui/card";
 import OptionsForm from "./pages/OptionsForm";
 import MarkDownPage from "./pages/MarkDownPage";
+import CatalogBrowser from "@/components/catalog/CatalogBrowser";
 import { useTheme } from "@/hooks/useTheme";
 import { Toaster } from "@/components/ui/toaster"
 
@@ -14,14 +15,18 @@ export default function App() {
     <div className="px-2">
       <Tabs defaultValue="options">
         <header className="sticky top-0 z-50 shadow-md pt-2 bg-background">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="options">Options</TabsTrigger>
+            <TabsTrigger value="catalog">Catalog</TabsTrigger>
             <TabsTrigger value="changelog">Changelog</TabsTrigger>
             <TabsTrigger value="about">About</TabsTrigger>
           </TabsList>
         </header>
         <TabsContent value="options">
           <OptionsForm />
+        </TabsContent>
+        <TabsContent value="catalog">
+          <CatalogBrowser />
         </TabsContent>
         <TabsContent value="changelog">
           <MarkDownPage

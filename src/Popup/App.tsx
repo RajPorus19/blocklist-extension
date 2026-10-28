@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as Typography from "@/components/ui/typography";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlockListsPage, BlockListBuilderPage } from "@/Popup/pages";
+import CatalogBrowser from "@/components/catalog/CatalogBrowser";
 import { useTheme } from "@/hooks/useTheme";
 import {
   checkAdapterConnection,
@@ -42,8 +43,9 @@ export default function App() {
     <div className="w-[500px] h-full flex flex-col justify-between bg-background">
       <Tabs value={activeTab} onValueChange={onTabChange}>
         <header className="sticky top-0 z-50 shadow-md pt-2 bg-background">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="blockLists">Block Lists</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="blockLists">Lists</TabsTrigger>
+            <TabsTrigger value="discover">Discover</TabsTrigger>
             <TabsTrigger value="builder">Builder</TabsTrigger>
           </TabsList>
         </header>
@@ -59,6 +61,9 @@ export default function App() {
             </div>
           )}
           <BlockListsPage />
+        </TabsContent>
+        <TabsContent value="discover">
+          <CatalogBrowser />
         </TabsContent>
         <TabsContent value="builder">
           <BlockListBuilderPage />

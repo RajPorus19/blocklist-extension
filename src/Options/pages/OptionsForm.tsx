@@ -125,6 +125,43 @@ export default function OptionsForm() {
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="catalogUrl"
+              render={({ field }) => (
+                <FormItem className="rounded-lg border p-4">
+                  <FormLabel className="text-base">Catalog URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="text" placeholder="https://…/catalog.json" />
+                  </FormControl>
+                  <FormDescription>
+                    The JSON catalog of premade block lists.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="catalogRefreshMinutes"
+              render={({ field }) => (
+                <FormItem className="rounded-lg border p-4">
+                  <FormLabel className="text-base">
+                    Catalog refresh interval (minutes)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      value={field.value}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {platformIds.map((platformId) => (
               <Card key={platformId}>
                 <CardHeader>

@@ -15,6 +15,8 @@ export type PlatformOptions = z.infer<typeof platformOptionsSchema>;
 export const optionsSchema = z.object({
   darkMode: z.boolean(),
   autoUpdate: z.boolean(),
+  catalogUrl: z.string().url(),
+  catalogRefreshMinutes: z.number().int().positive(),
   platforms: z.object({
     instagram: platformOptionsSchema,
     x: platformOptionsSchema,
@@ -34,6 +36,8 @@ export const defaultPlatformOptions: PlatformOptions = {
 export const defaultOptions: Options = {
   darkMode: false,
   autoUpdate: true,
+  catalogUrl: "https://blocklist.lol/catalog.json",
+  catalogRefreshMinutes: 60,
   platforms: {
     instagram: { ...defaultPlatformOptions },
     x: { ...defaultPlatformOptions, delayBetweenRequests: 10000, batchSize: 10 },

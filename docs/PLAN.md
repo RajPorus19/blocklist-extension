@@ -29,11 +29,16 @@ nouvelle identité, nouvelle version, nouvelle architecture.
 - [x] **Phase 0** — Fondations : Vitest + fix regex nom + erreurs fetch + README — **DONE**
 - [x] **Phase 1** — Abstraction plateforme + modèle + moteur + background + migration + manifest — **DONE**
 - [x] Adapter **Instagram** (refactor de référence, api + dom) — **DONE**
-- [ ] Adapter **TikTok** (dom-first, avant Facebook)
-- [ ] Adapter **X/Twitter**
-- [ ] Adapter **Facebook**
-- [ ] Adapter **YouTube** (channel + video)
+- [x] Adapter **TikTok** (dom-first, avant Facebook) — **DONE**
+- [x] Adapter **X/Twitter** — **DONE**
+- [x] Adapter **Facebook** — **DONE**
+- [x] Adapter **YouTube** (channel + video) — **DONE**
 - [ ] **Phase 2** — Catalogue + écran de sélection + flag `enabled`
+
+> ⚠️ À valider en conditions réelles (comptes connectés) : les backends `dom`
+> (sélecteurs génériques par texte) et les backends `api` hors Instagram (stubs
+> « unavailable » — TikTok signé, X queryId, FB mutation, YT Innertube). Seul le
+> backend `api` Instagram est le portage vérifié de l'ancien code.
 
 ---
 

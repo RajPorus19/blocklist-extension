@@ -12,6 +12,7 @@ interface BlockListActions {
   removeBlockLists: (blockListsIDs: string[]) => Promise<void>;
   updateBlockLists: (blockListsIDs: string[], blockLists: BlockList[]) => void;
   checkBlocklistsUpdate: (blockListsIDs: string[]) => Promise<void>;
+  setBlockListEnabled: (blockListId: string, enabled: boolean) => Promise<void>;
 }
 
 interface BlockListStore extends BlockListState {
@@ -76,6 +77,16 @@ const useBlockListStore = create<BlockListStore>((set) => ({
       const res = await sendMessage({
         type: MessageType.CHECK_BLOCKLISTS_UPDATE,
         payload: blockListsIDs,
+      });
+
+      set(() => ({
+        blockLists: res,
+      }));
+    },
+    async setBlockListEnabled(blockListId, enabled) {
+      const res = await sendMessage({
+        type: MessageType.SET_BLOCKLIST_ENABLED,
+        payload: [blockListId, enabled],
       });
 
       set(() => ({
