@@ -33,7 +33,7 @@ nouvelle identité, nouvelle version, nouvelle architecture.
 - [x] Adapter **X/Twitter** — **DONE**
 - [x] Adapter **Facebook** — **DONE**
 - [x] Adapter **YouTube** (channel + video) — **DONE**
-- [ ] **Phase 2** — Catalogue + écran de sélection + flag `enabled`
+- [x] **Phase 2** — Catalogue + écran de sélection + flag `enabled` — **DONE**
 
 > ⚠️ À valider en conditions réelles (comptes connectés) : les backends `dom`
 > (sélecteurs génériques par texte) et les backends `api` hors Instagram (stubs
@@ -283,6 +283,9 @@ Corrections parser :
 
 - Domaine provisoire : `blocklist.lol` (catalogue JSON + `.txt`).
 - `host_permissions` inclut `blocklist.lol` → fetch sans souci de CORS.
+- Template de catalogue : `templates/catalog.json`. Chaque `.txt` référencé doit
+  contenir l'en-tête `platform:<id>` pour que l'import détecte la bonne plateforme
+  (ex. `platform:youtube` + lignes `youtubeblocklist:kind=channel;…`).
 - `blockout.lol` = site de Raj, migré/pointé ensuite vers notre repo pour les ajouts.
 
 ---

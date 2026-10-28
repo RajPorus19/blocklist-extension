@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-28T00:00:00Z",
+  "lists": [
+    {
+      "id": "blockout2024",
+      "platform": "instagram",
+      "kind": "account",
+      "title": "Blockout 2024",
+      "description": "Celebrities who stayed silent on the war in Gaza.",
+      "category": "politics",
+      "tags": ["blockout", "celebrity"],
+      "url": "https://blocklist.lol/lists/blockout2024.txt",
+      "numEntries": 205,
+      "updatedAt": "2026-10-28T00:00:00Z"
+    },
+    {
+      "id": "example-x",
+      "platform": "x",
+      "kind": "account",
+      "title": "Example X list",
+      "description": "An example X/Twitter blocklist.",
+      "url": "https://blocklist.lol/lists/example-x.txt",
+      "numEntries": 10
+    },
+    {
+      "id": "example-tiktok",
+      "platform": "tiktok",
+      "kind": "account",
+      "title": "Example TikTok list",
+      "url": "https://blocklist.lol/lists/example-tiktok.txt",
+      "numEntries": 5
+    },
+    {
+      "id": "example-facebook",
+      "platform": "facebook",
+      "kind": "account",
+      "title": "Example Facebook list",
+      "url": "https://blocklist.lol/lists/example-facebook.txt",
+      "numEntries": 5
+    },
+    {
+      "id": "example-youtube",
+      "platform": "youtube",
+      "kind": "channel",
+      "title": "Example YouTube channels",
+      "url": "https://blocklist.lol/lists/example-youtube.txt",
+      "numEntries": 5
+    }
+  ]
+}
