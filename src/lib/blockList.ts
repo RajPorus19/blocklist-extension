@@ -1,54 +1,34 @@
 import { v4 as uuidv4 } from "uuid";
-import { BlockList, BlockListUser } from "./types";
+import { BlockList, BlockListSource, PlatformId } from "./types";
 import { timer, warnLog, errorLog, infoLog } from "@/utils/log";
-import { toggleBlockUser } from "@/services/instagram";
+import { getPlatformAdapter } from "@/services/platforms/registry";
+import {
+  BackendId,
+  BlockAction,
+  BlockingBackend,
+  BlockingOptions,
+  BlockingResult,
+} from "@/services/platforms/types";
+import { BackendPreference, getPlatformOptions } from "./options";
+import { errorMessage } from "@/utils/async";
 import * as chromStorage from "@/services/chrome/storage";
-import { getOptions } from "./options";
 
-/**
- * The title should follow the following format:
- * title:This Is My Source File Title.
- */
 export const titleLabel = "title:";
-/**
- * The description should follow the following format:
- * description:This Is My Source File Description And Maybe It Is Longer.
- */
 export const descriptionLabel = "description:";
-/**
- * The instagram block list should follow the following format:
- * instagramblocklist:id=123456789;name=example
- */
-export const instagramblocklistLabel = "instagramblocklist:";
-/**
- * The id should follow the following format:
- * id=123456789
- */
-export const idLabel = "id=";
-/**
- * The name should follow the following format:
- * name=example
- */
-export const nameLabel = "name=";
-/**
- * Extracts id, names, title, and description from the meat of
- * one or more block list text files, deduplicating within
- * and between lists.
- */
-const instagramBlockListRegex = /^instagramblocklist:id=\d+;name=[\w.-]+/;
-function toBlockListUser(line: string): BlockListUser | undefined {
-  if (instagramBlockListRegex.test(line)) {
-    const [id, name] = line.split(";");
-    return {
-      id: id.slice("instagramblocklist:id=".length),
-      name: name.slice("name=".length),
-      blocked: false,
-    };
+export const platformLabel = "platform:";
+
+function detectPlatformId(fileText: string): PlatformId {
+  const header = fileText
+    .split(/\r?\n/)
+    .find((line) => line.startsWith(platformLabel));
+  if (!header) {
+    return "instagram";
   }
-  return undefined;
+  return header.slice(platformLabel.length).trim() as PlatformId;
 }
 
 export function toBlockList(
+  sourceType: BlockListSource["type"],
   ...files: [url: string | undefined, contents: string][]
 ): BlockList[] {
   const stopTimer = timer("Parse block list");
@@ -56,22 +36,28 @@ export function toBlockList(
     const blockLists: BlockList[] = [];
 
     for (const [url, fileText] of files) {
+      const platformId = detectPlatformId(fileText);
+      const adapter = getPlatformAdapter(platformId);
+
       const blockList: BlockList = {
         id: uuidv4(),
-        users: [],
+        platform: adapter.id,
+        kind: adapter.defaultKind,
+        entries: [],
         infos: {
           url,
           title: undefined,
           description: undefined,
-          numUsers: 0,
+          numEntries: 0,
         },
+        enabled: true,
+        source: { type: sourceType, importedAt: new Date().toISOString() },
       };
+
       const seen = new Set<string>();
       let dupes = 0;
 
-      const lines = fileText.split(/\r?\n/);
-
-      for (const line of lines) {
+      for (const line of fileText.split(/\r?\n/)) {
         if (!blockList.infos.title && line.startsWith(titleLabel)) {
           blockList.infos.title = line.slice(titleLabel.length);
         } else if (
@@ -80,15 +66,12 @@ export function toBlockList(
         ) {
           blockList.infos.description = line.slice(descriptionLabel.length);
         } else {
-          const user = toBlockListUser(line);
-
-          if (user) {
-            const { id } = user;
-
-            if (!seen.has(id)) {
-              seen.add(id);
-              blockList.users.push(user);
-              blockList.infos.numUsers++;
+          const entry = adapter.parseEntryLine(line);
+          if (entry) {
+            if (!seen.has(entry.id)) {
+              seen.add(entry.id);
+              blockList.entries.push(entry);
+              blockList.infos.numEntries++;
             } else {
               dupes++;
             }
@@ -96,14 +79,18 @@ export function toBlockList(
         }
       }
 
+      blockList.kind = blockList.entries[0]?.kind ?? adapter.defaultKind;
+
       if (dupes > 0) {
         warnLog(
-          "blocklistFile",
-          `Discarded ${dupes} duplicate users from block list`
+          "blockListFile",
+          `Discarded ${dupes} duplicate entries from block list`
         );
       }
+
       blockLists.push(blockList);
     }
+
     return blockLists;
   } finally {
     stopTimer();
@@ -111,39 +98,110 @@ export function toBlockList(
 }
 
 export function validateBlockLists(blockLists: BlockList[]): BlockList[] {
-  return blockLists.filter((blockList) => blockList.users.length > 0);
+  return blockLists.filter((blockList) => blockList.entries.length > 0);
+}
+
+function backendOrder(
+  adapter: { defaultBackend: BackendId },
+  preference: BackendPreference
+): BackendId[] {
+  if (preference !== "auto") {
+    return [preference];
+  }
+  const others: BackendId[] = (["api", "dom"] as BackendId[]).filter(
+    (backend) => backend !== adapter.defaultBackend
+  );
+  return [adapter.defaultBackend, ...others];
+}
+
+async function runWithFallback(
+  adapter: {
+    label: string;
+    defaultBackend: BackendId;
+    backends: Partial<Record<BackendId, BlockingBackend>>;
+  },
+  preference: BackendPreference,
+  targets: BlockList["entries"],
+  action: BlockAction,
+  options: BlockingOptions
+): Promise<BlockingResult[]> {
+  for (const backendId of backendOrder(adapter, preference)) {
+    const backend = adapter.backends[backendId];
+    if (!backend) {
+      continue;
+    }
+    try {
+      if (!(await backend.checkConnection())) {
+        infoLog(
+          "blockList",
+          `backend ${backendId} not connected for ${adapter.label}`
+        );
+        continue;
+      }
+      return await backend.block(targets, action, options);
+    } catch (error) {
+      infoLog(
+        "blockList",
+        `backend ${backendId} failed for ${adapter.label}, trying next`,
+        errorMessage(error)
+      );
+    }
+  }
+  return targets.map((target) => ({
+    entryId: target.id,
+    ok: false,
+    error: `No working backend for ${adapter.label}`,
+  }));
 }
 
 export async function toggleBlockLists(
   blockLists: BlockList[],
   enable: boolean,
-  onSuccess: (blockListID: string, userIndex: number) => Promise<void> | void
-) {
+  onProgress: (
+    blockListId: string,
+    entryIndex: number,
+    result: BlockingResult
+  ) => Promise<void> | void
+): Promise<void> {
   try {
-    for (let i = 0; i < blockLists.length; i++) {
-      const blockList = blockLists[i];
-      for (let userIndex = 0; userIndex < blockList.users.length; userIndex++) {
-        const user = blockList.users[userIndex];
-        if (user.blocked === enable) {
+    for (const blockList of blockLists) {
+      if (enable && !blockList.enabled) {
+        continue;
+      }
+
+      const adapter = getPlatformAdapter(blockList.platform);
+      const platformOptions = await getPlatformOptions(blockList.platform);
+      const targets = blockList.entries.filter(
+        (entry) => entry.blocked !== enable
+      );
+      if (!targets.length) {
+        continue;
+      }
+
+      const results = await runWithFallback(
+        adapter,
+        platformOptions.backend,
+        targets,
+        enable ? "block" : "unblock",
+        {
+          delayMs: platformOptions.delayBetweenRequests,
+          batchSize: platformOptions.batchSize,
+        }
+      );
+
+      const indexById = new Map<string, number>();
+      blockList.entries.forEach((entry, index) => indexById.set(entry.id, index));
+
+      for (const result of results) {
+        const index = indexById.get(result.entryId);
+        if (index === undefined) {
           continue;
         }
-
-        await toggleBlockUser(user.id, enable ? "block" : "unblock");
-
-        await onSuccess(blockList.id, userIndex);
-
-        const options = await getOptions();
-        await new Promise((resolve) => {
-          infoLog(
-            "blockList",
-            `waiting ${options.delayBetweenRequests}ms before next request`
-          );
-          return setTimeout(resolve, options.delayBetweenRequests);
-        });
+        await onProgress(blockList.id, index, result);
       }
     }
-  } catch (e) {
-    errorLog("blockList", `Failed to toggle blocklists to ${enable}`, e);
+  } catch (error) {
+    errorLog("blockList", `Failed to toggle blocklists to ${enable}`, error);
   }
 }
 

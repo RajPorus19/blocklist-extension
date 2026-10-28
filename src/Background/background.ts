@@ -7,9 +7,11 @@ import {
   setBlockLists,
   toggleBlockLists,
 } from "@/lib/blockList";
+import { migrateBlockListsStorage } from "@/lib/migration";
 import { fetchBlockListURLs } from "@/lib/blockListUrl";
 import { getOptions, initializeOptions } from "@/lib/options";
 import { Message, MessageType, sendMessage } from "@/services/chrome/messaging";
+import { BlockingResult } from "@/services/platforms/types";
 
 infoLog("background", "background script is running");
 
@@ -79,28 +81,44 @@ async function onToggleBlockLists(blockListsIDs: string[], enable: boolean) {
     await toggleBlockLists(
       blockListsToToggle,
       enable,
-      async (blockListID, userIndex) => {
-        const blockLists = await getBlockLists();
-        const updatedBlockLists = [...blockLists];
-        const index = updatedBlockLists.findIndex(
-          (blockList) => blockList.id === blockListID
-        );
-
-        if (index === -1) {
-          throw new Error(`Blocklist not found: ${blockListID}`);
-        }
-
-        updatedBlockLists[index].users[userIndex].blocked = enable;
-        await setBlockLists(updatedBlockLists);
-        if (await isPopupOpen()) {
-          sendMessage({
-            type: MessageType.BLOCKLITS_UPDATED,
-            payload: [[blockListID], [updatedBlockLists[index]]],
-          });
-        }
+      async (blockListId, entryIndex, result) => {
+        await updateEntryState(blockListId, entryIndex, enable, result);
       }
     );
   });
+}
+
+async function updateEntryState(
+  blockListId: string,
+  entryIndex: number,
+  enable: boolean,
+  result: BlockingResult
+) {
+  const blockLists = await getBlockLists();
+  const updatedBlockLists = [...blockLists];
+  const index = updatedBlockLists.findIndex(
+    (blockList) => blockList.id === blockListId
+  );
+
+  if (index === -1) {
+    throw new Error(`Blocklist not found: ${blockListId}`);
+  }
+
+  const entry = updatedBlockLists[index].entries[entryIndex];
+  if (result.ok) {
+    entry.blocked = enable;
+    entry.error = undefined;
+  } else {
+    entry.error = result.error;
+  }
+
+  await setBlockLists(updatedBlockLists);
+  if (await isPopupOpen()) {
+    sendMessage({
+      type: MessageType.BLOCKLITS_UPDATED,
+      payload: [[blockListId], [updatedBlockLists[index]]],
+    });
+  }
 }
 
 async function onCheckBlockListsUpdate(blockListsIDs: string[]) {
@@ -117,17 +135,22 @@ async function onCheckBlockListsUpdate(blockListsIDs: string[]) {
         return blockList;
       }
       const [updatedBlockList] = await fetchBlockListURLs(blockList.infos.url);
-      updatedBlockList.users.forEach((user, index) => {
-        const userIndex = blockList.users.findIndex(
-          (blockListUser) => blockListUser.id === user.id
+      updatedBlockList.entries.forEach((entry, index) => {
+        const entryIndex = blockList.entries.findIndex(
+          (blockListEntry) => blockListEntry.id === entry.id
         );
-        if (userIndex === -1) {
+        if (entryIndex === -1) {
           return;
         }
-        updatedBlockList.users[index].blocked =
-          blockList.users[userIndex].blocked;
+        updatedBlockList.entries[index].blocked =
+          blockList.entries[entryIndex].blocked;
       });
-      return { ...updatedBlockList, id };
+      return {
+        ...updatedBlockList,
+        id,
+        enabled: blockList.enabled,
+        source: { ...blockList.source, updatedAt: new Date().toISOString() },
+      };
     })
   );
 
@@ -169,6 +192,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.runtime.onInstalled.addListener(() => {
   infoLog("background", "extension installed");
   (async () => {
+    await migrateBlockListsStorage();
     await initializeBlockLists();
     await initializeOptions();
   })();

@@ -6,7 +6,7 @@ export async function readBlockListFiles(files: File[]): Promise<BlockList[]> {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const fileText = await file.text();
-    const [blockList] = toBlockList([undefined, fileText]);
+    const [blockList] = toBlockList("file", [undefined, fileText]);
     blockLists.push(blockList);
   }
   return blockLists;

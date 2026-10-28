@@ -1,14 +1,25 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { BlockList, BlockListUser, BlockListInfo } from "@/lib/types";
+import {
+  BlockListEntry,
+  BlockListInfo,
+  PlatformId,
+  TargetKind,
+} from "@/lib/types";
 import * as chromeStorage from "./chrome/storage";
 
-interface BlockListBuilderState extends BlockList {}
+interface BlockListBuilderState {
+  platform: PlatformId;
+  kind: TargetKind;
+  entries: BlockListEntry[];
+  infos: BlockListInfo;
+}
 
 interface BlockListBuilderActions {
-  addUser: (user: BlockListUser) => void;
-  removeUser: (userID: string) => void;
-  removeAllUsers: () => void;
+  setPlatform: (platform: PlatformId) => void;
+  addEntry: (entry: BlockListEntry) => void;
+  removeEntry: (entryID: string) => void;
+  removeAllEntries: () => void;
   setInfo: (info: Partial<BlockListInfo>) => void;
 }
 
@@ -19,39 +30,44 @@ interface BlockListBuilderStore extends BlockListBuilderState {
 const useBlockListBuilderStore = create<BlockListBuilderStore>()(
   persist(
     (set) => ({
-      id: "",
-      users: [],
-      infos: {
-        title: "",
-        description: "",
-        url: undefined,
-        numUsers: 0,
-      },
+      platform: "instagram" as PlatformId,
+      kind: "account" as TargetKind,
+      entries: [],
+      infos: { title: "", description: "", numEntries: 0 },
       actions: {
-        addUser: (user) =>
+        setPlatform: (platform) =>
           set((state) => ({
-            users: [...state.users, user],
-            infos: { ...state.infos, numUsers: state.infos.numUsers + 1 },
+            platform,
+            kind: platform === "youtube" ? "channel" : "account",
+            entries: [],
+            infos: { ...state.infos, numEntries: 0 },
           })),
-        removeUser: (userID) =>
+        addEntry: (entry) =>
+          set((state) => ({
+            platform: entry.platform,
+            kind: entry.kind,
+            entries: [...state.entries, entry],
+            infos: { ...state.infos, numEntries: state.infos.numEntries + 1 },
+          })),
+        removeEntry: (entryID) =>
           set((state) => {
-            const userIndex = state.users.findIndex(
-              (user) => user.id === userID
+            const entryIndex = state.entries.findIndex(
+              (entry) => entry.id === entryID
             );
-            if (userIndex !== -1) {
-              const users = [...state.users];
-              users.splice(userIndex, 1);
+            if (entryIndex !== -1) {
+              const entries = [...state.entries];
+              entries.splice(entryIndex, 1);
               return {
-                users,
-                infos: { ...state.infos, numUsers: state.infos.numUsers - 1 },
+                entries,
+                infos: { ...state.infos, numEntries: state.infos.numEntries - 1 },
               };
             }
             return state;
           }),
-        removeAllUsers: () =>
+        removeAllEntries: () =>
           set((state) => ({
-            users: [],
-            infos: { ...state.infos, numUsers: 0 },
+            entries: [],
+            infos: { ...state.infos, numEntries: 0 },
           })),
         setInfo: (infos) =>
           set((state) => ({ infos: { ...state.infos, ...infos } })),
@@ -61,15 +77,23 @@ const useBlockListBuilderStore = create<BlockListBuilderStore>()(
       name: "blockListBuilder",
       storage: createJSONStorage(() => chromeStorage),
       partialize: (state) => ({
-        users: state.users,
+        platform: state.platform,
+        kind: state.kind,
+        entries: state.entries,
         infos: state.infos,
       }),
     }
   )
 );
 
-export const useBlockListBuilderUsers = () =>
-  useBlockListBuilderStore((state) => state.users);
+export const useBlockListBuilderPlatform = () =>
+  useBlockListBuilderStore((state) => state.platform);
+
+export const useBlockListBuilderKind = () =>
+  useBlockListBuilderStore((state) => state.kind);
+
+export const useBlockListBuilderEntries = () =>
+  useBlockListBuilderStore((state) => state.entries);
 
 export const useBlockListBuilderInfos = () =>
   useBlockListBuilderStore((state) => state.infos);

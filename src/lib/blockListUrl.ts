@@ -36,5 +36,5 @@ export async function fetchBlockListURLs(url: string): Promise<BlockList[]> {
   const blocklists: [string, string][] = blockListURLs.map(
     (blockListURL, index) => [blockListURL, blockListTexts[index]]
   );
-  return toBlockList(...blocklists);
+  return toBlockList("url", ...blocklists);
 }
