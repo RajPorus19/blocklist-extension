@@ -24,6 +24,19 @@ nouvelle identité, nouvelle version, nouvelle architecture.
 
 ---
 
+## 1bis. Statut d'implémentation (tenu à jour)
+
+- [x] **Phase 0** — Fondations : Vitest + fix regex nom + erreurs fetch + README — **DONE**
+- [ ] **Phase 1** — Abstraction plateforme + modèle + moteur + background + migration + manifest
+- [ ] Adapter **Instagram** (refactor de référence)
+- [ ] Adapter **X/Twitter**
+- [ ] Adapter **TikTok** (dom-first, avant Facebook)
+- [ ] Adapter **Facebook**
+- [ ] Adapter **YouTube** (channel + video)
+- [ ] **Phase 2** — Catalogue + écran de sélection + flag `enabled`
+
+---
+
 ## 2. Décisions actées
 
 | # | Sujet | Décision |
@@ -55,8 +68,10 @@ Fragilités identifiées à traiter :
 2. **Aucune vérification de la réponse** (`src/services/instagram.ts:84-89`) — le fetch
    ignore status/body : un blocage peut échouer (rate-limit, challenge) et l'utilisateur
    est quand même marqué `blocked=true`.
-3. **Bug parser** : regex `name=[A-Za-z0-9]+` (`src/lib/blockList.ts:38`) ne capture ni
-   `_` ni `.` → tronque les usernames (`john___squire` → `john`).
+3. **Robustesse parser** : la regex gate `name=[A-Za-z0-9]+` (`src/lib/blockList.ts:38`)
+   est plus étroite que le charset valide des usernames (`_`, `.`). En pratique les noms ne
+   sont **pas** tronqués (l'extraction passe par `split(";")` + `slice`, pas par les groupes
+   de la regex — vérifié par test). Élargie à `[\w.-]+` par robustesse (Phase 0).
 4. **Blocage un par un** alors que la mutation est `usePolarisBlockManyMutation`
    (`target_user_ids` est un tableau) → listes longues très lentes.
 5. **Tout est câblé Instagram en dur** : `services/instagram.ts`, `manifest.config.ts:21`
@@ -216,7 +231,8 @@ Labels par plateforme (une liste = une plateforme, homogène) :
 | YouTube    | `youtubeblocklist:kind=channel;id=…;name=…` et `youtubeblocklist:kind=video;id=…;name=…` |
 
 Corrections parser :
-- Regex nom élargie à `[\w.-]+` (fix du bug underscore/point).
+- Regex nom élargie à `[\w.-]+` (robustesse : gate aligné sur le charset valide ; les noms
+  n'étaient pas réellement tronqués).
 - Le parseur est désormais fourni par l'adaptateur (`parseUserLine` / `exportUserLine`),
   plus une regex générique unique.
 - Export : `platform:…` en en-tête + lignes d'entrée du bon label.
