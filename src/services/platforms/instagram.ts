@@ -7,6 +7,7 @@ import {
   PlatformAdapter,
   ResolvedTarget,
 } from "./types";
+import { createDomBackend } from "./domBackend";
 
 const GRAPH_QL_API = {
   block: {
@@ -53,6 +54,19 @@ async function getInstagramCookies() {
   }
 
   return cookies;
+}
+
+async function checkLogin(): Promise<boolean> {
+  try {
+    await getInstagramCookies();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function targetUrl(entry: BlockListEntry): string {
+  return `https://www.instagram.com/${entry.name}/`;
 }
 
 async function blockMany(userIds: string[], action: "block" | "unblock") {
@@ -120,12 +134,7 @@ async function blockMany(userIds: string[], action: "block" | "unblock") {
 const apiBackend: BlockingBackend = {
   id: "api",
   async checkConnection() {
-    try {
-      await getInstagramCookies();
-      return true;
-    } catch {
-      return false;
-    }
+    return checkLogin();
   },
   async block(entries, action, options) {
     const results = [];
@@ -160,26 +169,7 @@ const apiBackend: BlockingBackend = {
   },
 };
 
-const domBackend: BlockingBackend = {
-  id: "dom",
-  async checkConnection() {
-    try {
-      await getInstagramCookies();
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  // Implemented by the shared DOM backend framework (content script) in a
-  // later phase; the Instagram reference backend is `api`.
-  async block(entries) {
-    return entries.map((entry) => ({
-      entryId: entry.id,
-      ok: false,
-      error: "Instagram DOM backend not implemented yet.",
-    }));
-  },
-};
+const domBackend: BlockingBackend = createDomBackend({ targetUrl, checkLogin });
 
 function parseEntryLine(line: string): BlockListEntry | undefined {
   const match = line.match(/^instagramblocklist:id=(\d+);name=([\w.-]+)/);
@@ -236,6 +226,8 @@ export const instagramAdapter: PlatformAdapter = {
   parseEntryLine,
   exportEntryLine,
   resolveTarget,
+  targetUrl,
+  checkLogin,
   backends: { api: apiBackend, dom: domBackend },
   defaultBackend: "api",
 };

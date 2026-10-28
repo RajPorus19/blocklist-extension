@@ -1,8 +1,18 @@
 import { PlatformId } from "@/lib/types";
 import { PlatformAdapter } from "./types";
 import { instagramAdapter } from "./instagram";
+import { xAdapter } from "./x";
+import { tiktokAdapter } from "./tiktok";
+import { facebookAdapter } from "./facebook";
+import { youtubeAdapter } from "./youtube";
 
-const adapters: PlatformAdapter[] = [instagramAdapter];
+const adapters: PlatformAdapter[] = [
+  instagramAdapter,
+  xAdapter,
+  tiktokAdapter,
+  facebookAdapter,
+  youtubeAdapter,
+];
 
 export function getPlatformAdapter(id: PlatformId): PlatformAdapter {
   const adapter = adapters.find((candidate) => candidate.id === id);

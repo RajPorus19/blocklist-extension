@@ -40,6 +40,10 @@ export interface PlatformAdapter {
   parseEntryLine(line: string): BlockListEntry | undefined;
   exportEntryLine(entry: BlockListEntry): string;
   resolveTarget(url: string): Promise<ResolvedTarget | null>;
+  /** Build the URL to open for DOM-based blocking of a given entry. */
+  targetUrl(entry: BlockListEntry): string;
+  /** True when the user is logged in on this platform (session cookies present). */
+  checkLogin(): Promise<boolean>;
   backends: Partial<Record<BackendId, BlockingBackend>>;
   defaultBackend: BackendId;
 }
