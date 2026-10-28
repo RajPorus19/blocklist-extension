@@ -28,7 +28,7 @@ export default function Infos() {
         }
       />
       <Typography.Muted className="mt-2">
-        Number of users: {infos.numUsers}
+        Number of entries: {infos.numEntries}
       </Typography.Muted>
     </div>
   );

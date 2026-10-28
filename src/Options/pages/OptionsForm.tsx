@@ -15,11 +15,33 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
-import { defaultOptions, getOptions, optionsSchema, setOptions } from "@/lib/options";
+import {
+  defaultOptions,
+  getOptions,
+  optionsSchema,
+  setOptions,
+} from "@/lib/options";
+import { PlatformId } from "@/lib/types";
 import { errorLog, infoLog } from "@/utils/log";
 
+const platformIds: PlatformId[] = [
+  "instagram",
+  "x",
+  "facebook",
+  "youtube",
+  "tiktok",
+];
+
+const platformLabels: Record<PlatformId, string> = {
+  instagram: "Instagram",
+  x: "X / Twitter",
+  facebook: "Facebook",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+};
+
 export default function OptionsForm() {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof optionsSchema>>({
     resolver: zodResolver(optionsSchema),
     defaultValues: getOptions,
@@ -36,7 +58,7 @@ export default function OptionsForm() {
         title: "Options saved.",
         description: "Your options have been saved.",
         duration: 5000,
-      })
+      });
     } catch (error) {
       errorLog("options", "Failed to save options.", error);
       toast({
@@ -44,7 +66,7 @@ export default function OptionsForm() {
         description: "An error occurred while saving your options.",
         variant: "destructive",
         duration: 5000,
-      })
+      });
     }
   }
 
@@ -62,23 +84,6 @@ export default function OptionsForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
               control={form.control}
-              name="delayBetweenRequests"
-              render={({ field }) => (
-                <FormItem className="rounded-lg border p-4">
-                  <FormLabel className="text-base">Delay Between Requests</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="number" placeholder="Enter delay" />
-                  </FormControl>
-                  <FormDescription>
-                    The delay between requests in milliseconds.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="darkMode"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -89,12 +94,10 @@ export default function OptionsForm() {
                   <FormControl>
                     <Switch
                       checked={field.value}
-                      onCheckedChange={
-                        (value) => {
-                          field.onChange(value);
-                          onChangeDarkMode(value);
-                        }
-                      }
+                      onCheckedChange={(value) => {
+                        field.onChange(value);
+                        onChangeDarkMode(value);
+                      }}
                     />
                   </FormControl>
                 </FormItem>
@@ -108,7 +111,9 @@ export default function OptionsForm() {
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Auto Update</FormLabel>
-                    <FormDescription>Automatically update Block Lists</FormDescription>
+                    <FormDescription>
+                      Automatically update Block Lists.
+                    </FormDescription>
                   </div>
                   <FormControl>
                     <Switch
@@ -119,6 +124,81 @@ export default function OptionsForm() {
                 </FormItem>
               )}
             />
+
+            {platformIds.map((platformId) => (
+              <Card key={platformId}>
+                <CardHeader>
+                  <CardTitle>{platformLabels[platformId]}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name={`platforms.${platformId}.backend`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Backend</FormLabel>
+                        <FormControl>
+                          <select
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                          >
+                            <option value="auto">Auto (recommended)</option>
+                            <option value="api">API</option>
+                            <option value="dom">DOM</option>
+                          </select>
+                        </FormControl>
+                        <FormDescription>
+                          In Auto mode the extension silently falls back to the
+                          other backend when needed.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`platforms.${platformId}.delayBetweenRequests`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Delay between requests (ms)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`platforms.${platformId}.batchSize`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Batch size</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            value={field.value}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            ))}
 
             <div className="flex justify-between">
               <div>
@@ -144,11 +224,9 @@ export default function OptionsForm() {
                 Reset to default
               </Button>
             </div>
-
-
           </form>
         </Form>
       </CardContent>
-    </Card >
+    </Card>
   );
 }

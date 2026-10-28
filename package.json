@@ -1,11 +1,11 @@
 {
-  "name": "instagram-blocklist-extension",
-  "title": "Blocklist for Instagram",
-  "description": "Import blocklists to easily block mutliple users on Instagram. Or create your own blocklist and share it with others.",
-  "homepage": "https://blockout.lol/",
+  "name": "blocklist-extension",
+  "title": "Blocklist",
+  "description": "Import blocklists to block accounts across Instagram, X, TikTok, Facebook and YouTube. Or create your own blocklist and share it.",
+  "homepage": "https://blocklist.lol/",
   "license": "MIT",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.1.0",
   "type": "module",
   "author": {
     "name": "Antonin Juquel",
@@ -61,10 +61,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AntoninJuquel/instagram-blocklist-extension"
+    "url": "https://github.com/RajPorus19/blocklist-extension"
   },
   "bugs": {
-    "url": "https://github.com/AntoninJuquel/instagram-blocklist-extension/issues"
+    "url": "https://github.com/RajPorus19/blocklist-extension/issues"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.4.2",

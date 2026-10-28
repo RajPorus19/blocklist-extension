@@ -33,7 +33,7 @@ export default function BlockListItem({ blockList }: BlockListItemProps) {
     await navigator.clipboard.writeText(blockList.infos.url);
   }
 
-  const blockedUsers = blockList.users.filter((user) => user.blocked);
+  const blockedEntries = blockList.entries.filter((entry) => entry.blocked);
 
   return (
     <Card>
@@ -88,22 +88,22 @@ export default function BlockListItem({ blockList }: BlockListItemProps) {
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
             <AccordionTrigger>
-              Users (
-              {blockedUsers.length !== blockList.users.length
-                ? `${blockedUsers.length}/${blockList.users.length} blocked`
-                : blockList.users.length}
+              Entries (
+              {blockedEntries.length !== blockList.entries.length
+                ? `${blockedEntries.length}/${blockList.entries.length} blocked`
+                : blockList.entries.length}
               )
             </AccordionTrigger>
             <AccordionContent>
               <Typography.Ul className="my-0 list-none">
-                {blockList.users.map((user) => (
-                  <li key={user.id}>
-                    {user.blocked ? (
+                {blockList.entries.map((entry) => (
+                  <li key={entry.id}>
+                    {entry.blocked ? (
                       <Check className="h-4 w-4 text-green-500 inline" />
                     ) : (
                       <X className="h-4 w-4 text-red-500 inline" />
                     )}{" "}
-                    {user.name}
+                    {entry.name}
                   </li>
                 ))}
               </Typography.Ul>

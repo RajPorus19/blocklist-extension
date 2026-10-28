@@ -30,7 +30,7 @@ export function BlockLists() {
 
   const totalBlockedUsers = blockLists.reduce(
     (acc, blockList) =>
-      acc + blockList.users.filter((user) => user.blocked).length,
+      acc + blockList.entries.filter((entry) => entry.blocked).length,
     0
   );
 

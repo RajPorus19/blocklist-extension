@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Trash } from "lucide-react";
-import { BlockListUser } from "@/lib/types";
-import { getCurrentUser } from "@/lib/blockListBuilder";
 import {
-  useBlockListBuilderUsers,
+  getCurrentTarget,
+  ResolvedCurrentTarget,
+} from "@/lib/blockListBuilder";
+import {
+  useBlockListBuilderEntries,
   useBlockListBuilderActions,
 } from "@/services/blockListBuilderStore";
 import {
@@ -18,25 +20,25 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function Users() {
-  const [currentUser, setCurrentUser] = useState<BlockListUser | null | false>(
-    null
-  );
-  const users = useBlockListBuilderUsers();
+  const [currentTarget, setCurrentTarget] = useState<
+    ResolvedCurrentTarget | null | false
+  >(null);
+  const entries = useBlockListBuilderEntries();
   const blockListBuilderActions = useBlockListBuilderActions();
 
   async function addCurrentUser() {
-    if (currentUser && !alreadyAdded()) {
-      blockListBuilderActions.addUser(currentUser);
+    if (currentTarget && !alreadyAdded()) {
+      blockListBuilderActions.addEntry(currentTarget.entry);
     }
   }
 
   useEffect(() => {
     async function handleTabUpdate() {
       try {
-        setCurrentUser(null);
-        setCurrentUser(await getCurrentUser());
-      } catch (e) {
-        setCurrentUser(false);
+        setCurrentTarget(null);
+        setCurrentTarget(await getCurrentTarget());
+      } catch {
+        setCurrentTarget(false);
       }
     }
 
@@ -50,30 +52,34 @@ export default function Users() {
   }, []);
 
   function alreadyAdded() {
-    if (currentUser)
-      return users.find((user) => user.id === currentUser.id) !== undefined;
-
+    if (currentTarget) {
+      return (
+        entries.find((entry) => entry.id === currentTarget.entry.id) !==
+        undefined
+      );
+    }
     return false;
   }
 
   function buttonMessage() {
-    if (currentUser) {
+    if (currentTarget) {
       if (alreadyAdded()) {
         return "User already added";
       }
-      return `Add ${currentUser.name}`;
-    } else if (currentUser === false) {
-      return "Not on Instagram Profile";
+      return `Add ${currentTarget.entry.name}`;
+    } else if (currentTarget === false) {
+      return "Not on a supported profile";
     } else {
       return "Loading...";
     }
   }
+
   return (
     <Table className="caption-top">
       <TableCaption>
         <Button
           onClick={addCurrentUser}
-          disabled={!currentUser || alreadyAdded()}
+          disabled={!currentTarget || alreadyAdded()}
         >
           {buttonMessage()}
         </Button>
@@ -86,9 +92,9 @@ export default function Users() {
             <Button
               size="icon"
               variant="destructive"
-              onClick={blockListBuilderActions.removeAllUsers}
-              title={`Remove all users`}
-              disabled={users.length === 0}
+              onClick={blockListBuilderActions.removeAllEntries}
+              title="Remove all entries"
+              disabled={entries.length === 0}
             >
               <Trash className="h-4 w-4" />
             </Button>
@@ -96,16 +102,16 @@ export default function Users() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {[...users].reverse().map((user) => (
-          <TableRow key={user.id}>
-            <TableCell>{user.name}</TableCell>
-            <TableCell>{user.id}</TableCell>
+        {[...entries].reverse().map((entry) => (
+          <TableRow key={entry.id}>
+            <TableCell>{entry.name}</TableCell>
+            <TableCell>{entry.id}</TableCell>
             <TableCell className="text-right">
               <Button
                 size="icon"
                 variant="destructive"
-                onClick={() => blockListBuilderActions.removeUser(user.id)}
-                title={`Remove ${user.name}`}
+                onClick={() => blockListBuilderActions.removeEntry(entry.id)}
+                title={`Remove ${entry.name}`}
               >
                 <Trash className="h-4 w-4" />
               </Button>
