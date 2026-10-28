@@ -81,10 +81,35 @@ export async function toggleBlockUser(id: string, action: "block" | "unblock") {
 
   const raw = queryString(body);
 
-  await fetch("https://www.instagram.com/graphql/query/", {
+  const response = await fetch("https://www.instagram.com/graphql/query/", {
     method: "POST",
     headers,
     body: raw,
     redirect: "follow",
   });
+
+  if (!response.ok) {
+    throw new Error(
+      `Instagram GraphQL request failed -- ${response.status} ${response.statusText}`
+    );
+  }
+
+  const text = await response.text();
+
+  let json: { errors?: { message?: string }[] };
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(
+      "Instagram GraphQL returned a non-JSON response (likely a login or challenge page)."
+    );
+  }
+
+  if (json.errors?.length) {
+    throw new Error(
+      `Instagram GraphQL error: ${json.errors
+        .map((error) => error.message)
+        .join(", ")}`
+    );
+  }
 }

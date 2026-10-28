@@ -35,7 +35,7 @@ export const nameLabel = "name=";
  * one or more block list text files, deduplicating within
  * and between lists.
  */
-const instagramBlockListRegex = /^instagramblocklist:id=\d+;name=[A-Za-z0-9]+/;
+const instagramBlockListRegex = /^instagramblocklist:id=\d+;name=[\w.-]+/;
 function toBlockListUser(line: string): BlockListUser | undefined {
   if (instagramBlockListRegex.test(line)) {
     const [id, name] = line.split(";");

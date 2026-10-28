@@ -1,6 +1,6 @@
 # Instagram Block List Chrome Extension
 
-Instagram Block List is a Chrome extension designed to simplify the process of managing your Instagram account's block list. With this extension, users can import block lists from local files or URLs, automatically blocking accounts listed within. The extension allows for easy management of block lists, including viewing imported lists, reviewing blocked accounts, and exporting combined lists for sharing or backup purposes. Additionally, users can revert blocks by removing block lists and utilize a Block List Builder to create custom block lists based on their interactions on Instagram. All data is persistent and synced across the user's Google accounts and browsers for seamless usage.
+Instagram Block List is a Chrome extension designed to simplify the process of managing your Instagram account's block list. With this extension, users can import block lists from local files or URLs, automatically blocking accounts listed within. The extension allows for easy management of block lists, including viewing imported lists, reviewing blocked accounts, and exporting combined lists for sharing or backup purposes. Additionally, users can revert blocks by removing block lists and utilize a Block List Builder to create custom block lists based on their interactions on Instagram. All data is persistent and stored locally in the browser for seamless usage.
 
 ## Technologies Used
 
@@ -47,7 +47,7 @@ This project was bootstrapped with [Vite](https://vitejs.dev/) using [CRXJS](htt
 
 ### **Data Persistence and Sync**:
 
-- All extension data, including block lists and settings, are persistent and synced across the user's Google accounts and browsers.
+- All extension data, including block lists and settings, are persistent and stored locally in the browser.
 
 Start managing your Instagram block lists more efficiently with Instagram Block List Chrome Extension!
 
