@@ -27,10 +27,10 @@ nouvelle identité, nouvelle version, nouvelle architecture.
 ## 1bis. Statut d'implémentation (tenu à jour)
 
 - [x] **Phase 0** — Fondations : Vitest + fix regex nom + erreurs fetch + README — **DONE**
-- [ ] **Phase 1** — Abstraction plateforme + modèle + moteur + background + migration + manifest
-- [ ] Adapter **Instagram** (refactor de référence)
-- [ ] Adapter **X/Twitter**
+- [x] **Phase 1** — Abstraction plateforme + modèle + moteur + background + migration + manifest — **DONE**
+- [x] Adapter **Instagram** (refactor de référence, api + dom) — **DONE**
 - [ ] Adapter **TikTok** (dom-first, avant Facebook)
+- [ ] Adapter **X/Twitter**
 - [ ] Adapter **Facebook**
 - [ ] Adapter **YouTube** (channel + video)
 - [ ] **Phase 2** — Catalogue + écran de sélection + flag `enabled`
